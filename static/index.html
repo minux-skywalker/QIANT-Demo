@@ -45,28 +45,26 @@
 
       const form = e.target;
       const formData = new FormData();
-
       formData.append("jd", form.jd.files[0]);
-
       for (let file of form.resumes.files) {
         formData.append("resumes", file);
       }
 
-      const response = await fetch("http://resume-app-lb-1973762325.ap-south-1.elb.amazonaws.com/upload", {
+      const response = await fetch("http://127.0.0.1:8000/upload", {
         method: "POST",
         body: formData
       });
 
-      results = await response.json();
+      const json = await response.json();
+      results = json.results;
 
-      // Show Table
       const table = document.getElementById("resultsTable");
       const tbody = table.querySelector("tbody");
       tbody.innerHTML = "";
 
       results.forEach(item => {
         const row = document.createElement("tr");
-        row.innerHTML = `<td>${item.name}</td><td>${item.score}</td><td>${item.reason}</td>`;
+        row.innerHTML = `<td>${item.resume_name}</td><td>${item.score}</td><td>${item.reason}</td>`;
         tbody.appendChild(row);
       });
 
@@ -78,11 +76,10 @@
     });
 
     function renderChart(data) {
-      const labels = data.map(item => item.name);
+      const labels = data.map(item => item.resume_name);
       const scores = data.map(item => item.score);
 
       const ctx = document.getElementById('scoreChart').getContext('2d');
-
       new Chart(ctx, {
         type: 'bar',
         data: {
@@ -106,7 +103,7 @@
 
     function downloadExcel() {
       const wb = XLSX.utils.book_new();
-      const ws_data = [["Name", "Score", "Reason"], ...results.map(r => [r.name, r.score, r.reason])];
+      const ws_data = [["Name", "Score", "Reason"], ...results.map(r => [r.resume_name, r.score, r.reason])];
       const ws = XLSX.utils.aoa_to_sheet(ws_data);
       XLSX.utils.book_append_sheet(wb, ws, "Resume Scores");
       XLSX.writeFile(wb, "resume_scores.xlsx");
